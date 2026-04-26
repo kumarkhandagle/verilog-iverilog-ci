@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module tb_adder;
+module tb;
 
     // Testbench signals
     reg  [1:0] a, b;

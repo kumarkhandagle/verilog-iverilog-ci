@@ -8,4 +8,5 @@ module adder (
     output cout
 );
     assign {cout, sum} = a + b + {2'b0, cin};
+	
 endmodule
