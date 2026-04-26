@@ -33,16 +33,21 @@ jobs:
     needs: lint
     steps:
       - uses: actions/checkout@v4
+
       - name: Install Verilator
         run: sudo apt-get update && sudo apt-get install -y verilator
 
-      - name: Run Coverage with Verilator
+      - name: Run Coverage (Simpler Method)
         run: |
           echo "=== Generating Code Coverage ==="
+          mkdir -p logs/coverage
+          
           verilator --cc --coverage --top-module adder \
-            src/adder.v --exe tb/tb.v
+            src/adder.v tb/tb.v --main
+          
           make -C obj_dir -f Vadder.mk
-          ./obj_dir/Vadder +verilator+rand+reset+2
+          ./obj_dir/Vadder
+          
           verilator_coverage --annotate logs/coverage obj_dir/coverage.dat
 
       - name: Upload Coverage Report
