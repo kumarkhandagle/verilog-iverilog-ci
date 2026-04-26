@@ -56,7 +56,7 @@ module tb;
     // Generate VCD (optional)
     initial begin
         $dumpfile("adder_waveform.vcd");
-        $dumpvars(0, tb_adder);
+        $dumpvars(0, tb);
     end
 
 endmodule
