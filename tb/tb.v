@@ -1,4 +1,4 @@
-`timescale 1ns / 1ps
+`timescale 1ns/1ps
 
 module tb_adder;
 
@@ -8,7 +8,7 @@ module tb_adder;
     wire [1:0] sum;
     wire       cout;
 
-    // Instantiate the DUT (Design Under Test)
+    // Instantiate the DUT
     adder dut (
         .a(a),
         .b(b),
@@ -27,35 +27,13 @@ module tb_adder;
         $display("Time |  a   b  cin | sum  cout | Expected | Result");
         $display("--------------------------------------------------");
 
-        // Test Case 1: 0 + 0 + 0 = 0
-        a = 2'b00; b = 2'b00; cin = 0; #10;
-        expected = a + b + cin;
-        check_result();
-
-        // Test Case 2: 1 + 1 + 0 = 2
-        a = 2'b01; b = 2'b01; cin = 0; #10;
-        expected = a + b + cin;
-        check_result();
-
-        // Test Case 3: 3 + 3 + 0 = 6 (sum=2, cout=1)
-        a = 2'b11; b = 2'b11; cin = 0; #10;
-        expected = a + b + cin;
-        check_result();
-
-        // Test Case 4: 3 + 3 + 1 = 7 (sum=3, cout=1)
-        a = 2'b11; b = 2'b11; cin = 1; #10;
-        expected = a + b + cin;
-        check_result();
-
-        // Test Case 5: 2 + 1 + 1 = 4 (sum=0, cout=1)
-        a = 2'b10; b = 2'b01; cin = 1; #10;
-        expected = a + b + cin;
-        check_result();
-
-        // Test Case 6: Random values
-        a = 2'b01; b = 2'b10; cin = 0; #10;
-        expected = a + b + cin;
-        check_result();
+        // Test cases
+        a = 2'b00; b = 2'b00; cin = 0; #10; expected = a + b + {2'b0, cin}; check_result();
+        a = 2'b01; b = 2'b01; cin = 0; #10; expected = a + b + {2'b0, cin}; check_result();
+        a = 2'b11; b = 2'b11; cin = 0; #10; expected = a + b + {2'b0, cin}; check_result();
+        a = 2'b11; b = 2'b11; cin = 1; #10; expected = a + b + {2'b0, cin}; check_result();
+        a = 2'b10; b = 2'b01; cin = 1; #10; expected = a + b + {2'b0, cin}; check_result();
+        a = 2'b01; b = 2'b10; cin = 0; #10; expected = a + b + {2'b0, cin}; check_result();
 
         $display("========================================");
         $display("          Testbench Completed");
@@ -63,7 +41,6 @@ module tb_adder;
         $finish;
     end
 
-    // Task to check and display result
     task check_result;
         begin
             if ({cout, sum} == expected) begin
@@ -76,7 +53,7 @@ module tb_adder;
         end
     endtask
 
-    // Generate VCD file (optional - for waveform viewing)
+    // Generate VCD (optional)
     initial begin
         $dumpfile("adder_waveform.vcd");
         $dumpvars(0, tb_adder);
