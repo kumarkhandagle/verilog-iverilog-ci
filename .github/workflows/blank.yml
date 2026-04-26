@@ -43,7 +43,7 @@ jobs:
           mkdir -p logs/coverage
           
           verilator --cc --coverage --top-module adder \
-            src/adder.v tb/tb.v --main
+            src/adder.v tb/tb.v --main --exe
           
           make -C obj_dir -f Vadder.mk
           ./obj_dir/Vadder
