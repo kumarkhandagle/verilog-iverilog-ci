@@ -2,28 +2,23 @@ name: Icarus Verilog CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 
 jobs:
   simulate:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Icarus Verilog
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y iverilog
+      - name: Install Icarus
+        run: sudo apt-get update && sudo apt-get install -y iverilog
 
-      - name: Compile DUT + Testbench
-        run: |
-          # === CHANGE THE FILENAMES BELOW TO MATCH YOUR PROJECT ===
-          iverilog -Wall -o simulation.vvp src/*.v tb/tb.v
-          # Alternative for many files:
-          # iverilog -Wall -o simulation.vvp *.v
+      - name: Compile
+        run: iverilog -Wall -o sim.vvp src/*.v tb/tb.v
 
-      - name: Run Simulation
-        run: vvp simulation.vvp
+      - name: Run
+        run: vvp sim.vvp
