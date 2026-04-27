@@ -1,4 +1,4 @@
-name: Verilog CI
+name: Icarus Verilog CI
 
 on:
   push:
@@ -7,24 +7,73 @@ on:
     branches: [ main ]
 
 jobs:
-   coverage:
+  # ==================== LINT JOB ====================
+  lint:
     runs-on: ubuntu-latest
+    name: Lint Verilog Code
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Verilator
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y verilator
+
+      - name: Run Lint Check
+        run: |
+          echo "=== Running Verilator Lint ==="
+          verilator --lint-only --Wall --no-timing src/*.v tb/tb.v
+
+  # ==================== SIMULATION JOB ====================
+  simulate:
+    runs-on: ubuntu-latest
+    name: Run Simulation
     needs: lint
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Icarus Verilog
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog
+
+      - name: Compile Design + Testbench
+        run: |
+          echo "=== Compiling ==="
+          iverilog -Wall -o sim.vvp src/*.v tb/tb.v
+
+      - name: Run Simulation
+        run: |
+          echo "=== Running Simulation ==="
+          vvp sim.vvp
+
+  # ==================== COVERAGE JOB ====================
+  coverage:
+    runs-on: ubuntu-latest
+    name: Code Coverage
+    needs: lint
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
       - name: Install Icarus + Covered
         run: |
           sudo apt-get update
           sudo apt-get install -y iverilog covered
 
-      - name: Compile with VCD Dump
+      - name: Compile with VCD Support
         run: |
-          iverilog -Wall -o sim.vvp -D DUMP_VCD src/*.v tb/tb.v
+          echo "=== Compiling for Coverage ==="
+          iverilog -Wall -o sim.vvp src/*.v tb/tb.v
 
       - name: Run Simulation + Generate Coverage
         run: |
+          echo "=== Running Simulation for Coverage ==="
           vvp sim.vvp
+          
+          echo "=== Generating Coverage Report ==="
           covered score -t tb -vcd dump.vcd -o coverage.cdd
           covered report coverage.cdd > coverage_report.txt
           cat coverage_report.txt
