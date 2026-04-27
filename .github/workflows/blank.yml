@@ -23,7 +23,7 @@ jobs:
       - name: Run Lint Check
         run: |
           echo "=== Running Verilator Lint ==="
-          verilator --lint-only --Wall --no-timing src/*.v tb/tb.v
+          verilator --lint-only --Wall --timing src/*.v tb/tb.v
 
   # ==================== SIMULATION JOB ====================
   simulate:
