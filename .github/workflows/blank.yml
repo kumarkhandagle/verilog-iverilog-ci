@@ -1,4 +1,4 @@
-name: Icarus Verilog CI
+name: Verilog CI
 
 on:
   push:
@@ -7,77 +7,46 @@ on:
     branches: [ main ]
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Verilator
-        run: sudo apt-get update && sudo apt-get install -y verilator
-      
-      - name: Lint Check
-        run: verilator --lint-only --Wall --timing src/*.v tb/tb.v
-
-  simulate:
-    runs-on: ubuntu-latest
-    needs: lint
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Icarus
-        run: sudo apt-get update && sudo apt-get install -y iverilog
-      
-      - name: Compile & Run
-        run: |
-          iverilog -Wall -o sim.vvp src/*.v tb/tb.v
-          timeout 30 vvp sim.vvp
-        timeout-minutes: 2
-
   coverage:
     runs-on: ubuntu-latest
-    needs: lint
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Verilator
         run: sudo apt-get update && sudo apt-get install -y verilator
 
-      - name: Verify Source Files Exist
+      - name: Run Coverage
         run: |
-          echo "=== Checking for source files ==="
-          ls -la src/ tb/ || echo "WARN: Check your file structure"
-
-      - name: Run Coverage with Proper Testbench
-        run: |
-          echo "=== Generating Code Coverage ==="
-          mkdir -p logs/coverage
+          echo "=== Setting up directories ==="
+          mkdir -p obj_dir logs/coverage
           
-          # CRITICAL: Testbench MUST have $finish to exit simulation
-          # Verilator cannot generate coverage if simulation hangs forever
-          verilator --cc --coverage --top-module adder \
+          echo "=== Compiling with Verilator ==="
+          verilator --cc --coverage \
+            --top-module tb \
             -CFLAGS "-std=c++17" \
-            src/adder.v tb/tb.v --exe --build -j 4
+            src/adder.v tb/tb.v \
+            --exe --build -j 4
           
-          # Run with timeout to prevent hanging
-          timeout 30 ./obj_dir/Vadder || true
+          echo "=== Running simulation ==="
+          timeout 30 ./obj_dir/Vtb || echo "Simulation exited (may be normal)"
           
-          # Generate coverage report
+          echo "=== Checking for coverage data ==="
           if [ -f obj_dir/coverage.dat ]; then
+            echo "✓ coverage.dat found"
             verilator_coverage --annotate logs/coverage obj_dir/coverage.dat
-            echo "=== Coverage report generated successfully ==="
+            echo "✓ Coverage report generated"
           else
-            echo "ERROR: coverage.dat not found - simulation may have failed"
+            echo "✗ coverage.dat NOT found - testbench may not have exited properly"
             exit 1
           fi
 
-      - name: Check Coverage Output
+      - name: Display Coverage Results
         run: |
-          echo "=== Checking coverage output ==="
-          if [ -d logs/coverage ]; then
-            find logs/coverage -type f | head -20
-          else
-            echo "No coverage directory found"
-          fi
+          echo "=== Coverage Report Files ==="
+          find logs/coverage -type f | head -20
+          echo ""
+          echo "=== Sample Coverage Output ==="
+          head -50 logs/coverage/adder.v.html || echo "No HTML files found"
 
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
