@@ -7,77 +7,42 @@ on:
     branches: [ main ]
 
 jobs:
-  # ==================== LINT JOB ====================
   lint:
     runs-on: ubuntu-latest
-    name: Lint Verilog Code
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Install Verilator
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y verilator
+        run: sudo apt-get update && sudo apt-get install -y verilator
+      - name: Run Lint
+        run: verilator --lint-only --Wall --no-timing src/*.v tb/tb.v
 
-      - name: Run Lint Check
-        run: |
-          echo "=== Running Verilator Lint ==="
-          verilator --lint-only --Wall --timing src/*.v tb/tb.v
-
-  # ==================== SIMULATION JOB ====================
   simulate:
     runs-on: ubuntu-latest
-    name: Run Simulation
     needs: lint
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Install Icarus Verilog
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y iverilog
-
-      - name: Compile Design + Testbench
-        run: |
-          echo "=== Compiling ==="
-          iverilog -Wall -o sim.vvp src/*.v tb/tb.v
-
+      - uses: actions/checkout@v4
+      - name: Install Icarus
+        run: sudo apt-get update && sudo apt-get install -y iverilog
+      - name: Compile
+        run: iverilog -Wall -o sim.vvp src/*.v tb/tb.v
       - name: Run Simulation
-        run: |
-          echo "=== Running Simulation ==="
-          vvp sim.vvp
+        run: vvp sim.vvp
 
-  # ==================== COVERAGE JOB ====================
   coverage:
     runs-on: ubuntu-latest
-    name: Code Coverage
     needs: lint
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Install Icarus + Covered
+        run: sudo apt-get update && sudo apt-get install -y iverilog covered
+      - name: Compile
+        run: iverilog -Wall -o sim.vvp src/*.v tb/tb.v
+      - name: Run Simulation + Coverage
         run: |
-          sudo apt-get update
-          sudo apt-get install -y iverilog covered
-
-      - name: Compile with VCD Support
-        run: |
-          echo "=== Compiling for Coverage ==="
-          iverilog -Wall -o sim.vvp src/*.v tb/tb.v
-
-      - name: Run Simulation + Generate Coverage
-        run: |
-          echo "=== Running Simulation for Coverage ==="
           vvp sim.vvp
-          
-          echo "=== Generating Coverage Report ==="
-          covered score -t tb -vcd dump.vcd -o coverage.cdd
+          covered score -t tb -v src/adder.v tb/tb.v -vcd dump.vcd -o coverage.cdd
           covered report coverage.cdd > coverage_report.txt
           cat coverage_report.txt
-
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v4
         with:
