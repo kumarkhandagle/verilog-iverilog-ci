@@ -40,7 +40,7 @@ jobs:
       - name: Run Simulation + Coverage
         run: |
           vvp sim.vvp
-          covered score -t tb -v src/adder.v tb/tb.v -vcd dump.vcd -o coverage.cdd
+          covered score -t tb -vcd dump.vcd -o coverage.cdd src/adder.v tb/tb.v
           covered report coverage.cdd > coverage_report.txt
           cat coverage_report.txt
       - name: Upload Coverage Report
