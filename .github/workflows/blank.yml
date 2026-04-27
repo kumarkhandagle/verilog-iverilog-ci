@@ -14,7 +14,7 @@ jobs:
       - name: Install Verilator
         run: sudo apt-get update && sudo apt-get install -y verilator
       - name: Run Lint
-        run: verilator --lint-only --Wall --no-timing src/*.v tb/tb.v
+        run: verilator --lint-only --Wall --timing src/*.v tb/tb.v
 
   simulate:
     runs-on: ubuntu-latest
